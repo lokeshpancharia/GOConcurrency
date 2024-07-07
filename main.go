@@ -6,40 +6,25 @@ import (
 )
 
 var msg string
-
-func updateMessage(s string) {
-	defer wg.Done()
-	msg = s
-}
-
-func printMessage() {
-	fmt.Println(msg)
-}
-
 var wg sync.WaitGroup
 
+func updateMessage(s string, m *sync.Mutex) {
+	defer wg.Done()
+
+	m.Lock()
+	msg = s
+	m.Unlock()
+}
+
 func main() {
-
-	// challenge: modify this code so that the calls to updateMessage() on lines
-	// 28, 30, and 33 run as goroutines, and implement wait groups so that
-	// the program runs properly, and prints out three different messages.
-	// Then, write a test for all three functions in this program: updateMessage(),
-	// printMessage(), and main().
-
 	msg = "Hello, world!"
 
-	wg.Add(1)
-	go updateMessage("Hello, universe!")
-	wg.Wait()
-	printMessage()
+	var mutex sync.Mutex
 
-	wg.Add(1)
-	go updateMessage("Hello, cosmos!")
+	wg.Add(2)
+	go updateMessage("Hello, universe!", &mutex)
+	go updateMessage("Hello, cosmos!", &mutex)
 	wg.Wait()
-	printMessage()
 
-	wg.Add(1)
-	go updateMessage("Hello, world!")
-	wg.Wait()
-	printMessage()
+	fmt.Println(msg)
 }
